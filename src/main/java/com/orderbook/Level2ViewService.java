@@ -116,6 +116,8 @@ public class Level2ViewService implements Level2View{
 	public void onCancelOrder(long orderId) {
 		if(nonNull(orderMap.get(orderId))) {
 			orderMap.remove(orderId);		
+		} else {
+			throw new IllegalArgumentException("An order with this orderId does not exists!");
 		}
 	}
 
@@ -187,8 +189,6 @@ public class Level2ViewService implements Level2View{
 
 	@Override
 	public BigDecimal getTopOfBook(Side side) {
-
-		
 		return Side.ASK.equals(side) ? getLowestAsk() : getHighestBid();
 	}
 

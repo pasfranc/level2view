@@ -71,13 +71,11 @@ public class Level2ViewValidated extends Level2ViewDecorator {
 	}
 	
 	private void validateQuantity(long quantity) {
-		if(isNull(quantity)) throw new IllegalArgumentException("Quantity cannot be null!");
-		if(quantity <= 0) throw new IllegalArgumentException("Quantity should be a positive number!");
+		if(quantity <= 0) throw new IllegalArgumentException("Quantity should be more than zero!");
 	}
 	
 	private void validateOrderId(long orderId) {
-		if(isNull(orderId)) throw new IllegalArgumentException("OrderId cannot be null!");
-		if(orderId <= 0) throw new IllegalArgumentException("OrderId should be a positive number!");
+		if(orderId <= 0) throw new IllegalArgumentException("OrderId should be more than zero!");
 	}
 	
 	private void validateSide(Side side) {
@@ -86,7 +84,7 @@ public class Level2ViewValidated extends Level2ViewDecorator {
 	
 	private void validatePrice(BigDecimal price) {
 		if(isNull(price)) throw new IllegalArgumentException("Price cannot be null!");
-		if(price.signum()<1)  throw new IllegalArgumentException("Price should be a positive number!");
+		if(price.signum()<1)  throw new IllegalArgumentException("Price should be more than zero!");
 	}
 
 

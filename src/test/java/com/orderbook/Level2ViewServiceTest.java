@@ -216,5 +216,114 @@ public class Level2ViewServiceTest{
         assertEquals(3L,level2.getBookDepth(Side.ASK));
 
     }
+	
+	@Test
+    public void testOnCancelOrderOverTheSpreadThatInsertNewOrder() {
+		Level2View level2 = new Level2ViewService(true);
+
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
+
+		level2.onCancelOrder(1);
+
+        assertEquals(new BigDecimal("10.00"), level2.getTopOfBook(Side.ASK));
+        assertEquals(50L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
+
+    }
+	
+	@Test(expected = IllegalArgumentException.class) 
+    public void testOnCancelOrderThatDoesNotExist() {
+		Level2View level2 = new Level2ViewService();
+
+		level2.onCancelOrder(1);
+
+    }
+	
+	@Test(expected = IllegalArgumentException.class) 
+    public void testOnReplaceOrderThatDoesNotExist() {
+		Level2View level2 = new Level2ViewService();
+
+		level2.onReplaceOrder(new BigDecimal("12.00"), 1000, 4);
+
+
+    }
+	
+	@Test(expected = IllegalArgumentException.class) 
+    public void testOnTradeOrderThatDoesNotExist() {
+		Level2View level2 = new Level2ViewService();
+
+		level2.onTrade(1000, 1);
+
+    }
+	
+	@Test(expected = IllegalArgumentException.class) 
+    public void testOnCreateOrderThatAlreadyExist() {
+		Level2View level2 = new Level2ViewService();
+		
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 1, 2);
+
+    }
+	
+	@Test
+    public void testGetSizeOnPriceLevel() {
+		Level2View level2 = new Level2ViewService();
+
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 1, 3);
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 10, 4);
+
+        assertEquals(161L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
+
+    }
+	
+	@Test
+    public void testOnTradeThatCancelAnOrder() {
+		Level2View level2 = new Level2ViewService();
+		
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
+		level2.onNewOrder(Side.BID, new BigDecimal("10.00"), 100, 2);
+
+		assertEquals(0L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
+		assertEquals(0L, level2.getSizeForPriceLevel(Side.BID, new BigDecimal("10.00")));
+		assertEquals(BigDecimal.ZERO, level2.getTopOfBook(Side.ASK));
+		assertEquals(BigDecimal.ZERO, level2.getTopOfBook(Side.BID));
+    }
+	
+	@Test
+    public void testOnTradeThatPartiallyConsumeAnOrder() {
+		Level2View level2 = new Level2ViewService();
+		
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 101, 1);
+		level2.onNewOrder(Side.BID, new BigDecimal("10.00"), 100, 2);
+
+		assertEquals(1L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
+		assertEquals(0L, level2.getSizeForPriceLevel(Side.BID, new BigDecimal("10.00")));
+		assertEquals(new BigDecimal("10.00"), level2.getTopOfBook(Side.ASK));
+		assertEquals(BigDecimal.ZERO, level2.getTopOfBook(Side.BID));
+    }
+	
+	@Test
+    public void testGetSizeForPriceLevel() {
+		Level2View level2 = new Level2ViewService();
+		
+		assertEquals(0L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
+		assertEquals(0L, level2.getSizeForPriceLevel(Side.BID, new BigDecimal("10.00")));
+		
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 101, 1);
+		level2.onNewOrder(Side.BID, new BigDecimal("9.00"), 100, 2);
+
+		assertEquals(101L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
+		assertEquals(100L, level2.getSizeForPriceLevel(Side.BID, new BigDecimal("9.00")));
+		
+		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 101, 3);
+		level2.onNewOrder(Side.BID, new BigDecimal("9.00"), 100, 4);
+		
+		assertEquals(202L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
+		assertEquals(200L, level2.getSizeForPriceLevel(Side.BID, new BigDecimal("9.00")));
+
+    }
+
 
 }
