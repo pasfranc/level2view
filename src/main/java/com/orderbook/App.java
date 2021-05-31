@@ -5,9 +5,9 @@ import java.math.BigDecimal;
 import com.orderbook.Level2View.Side;
 
 public class App {
-    public static void main( String[] args ) {
+	public static void main(String[] args) {
 		Level2View level2 = new Level2ViewValidated(new Level2ViewService());
-		
+
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		System.out.println(level2);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 2);
@@ -31,7 +31,7 @@ public class App {
 		System.out.println(level2.getTopOfBook(Side.ASK));
 
 		System.out.println(level2.getTopOfBook(Side.BID));
-		
-		System.out.println(level2.getSizeForPriceLevel(Side.ASK,new BigDecimal("15.00")));
-    }
+
+		System.out.println(level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("15.00")));
+	}
 }

@@ -8,11 +8,11 @@ import org.junit.Test;
 
 import com.orderbook.Level2View.Side;
 
-public class Level2ViewServiceTest {
+public class Level2ViewAlternativeTest {
 
 	@Test
 	public void testOnNewOrder() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 
@@ -24,7 +24,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnNewOrderMultipleOrdersSamePrice() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 		long orderId = 1;
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, orderId++);
@@ -41,7 +41,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnNewOrderMultipleOrdersAskAndBid() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 		long orderId = 1;
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, orderId++);
@@ -64,7 +64,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnReplaceOrder() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -92,7 +92,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnReplaceOrderOverTheSpread() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -122,7 +122,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnReplaceBidOrderOverTheSpreadThatInsertNewOrder() {
-		Level2View level2 = new Level2ViewService(true);
+		Level2View level2 = new Level2ViewAlternativeService(true);
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -152,7 +152,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnReplaceBidOrderOverTheSpreadThatConsumeAll() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -170,7 +170,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnReplaceBidOrderOverTheSpreadThatConsumeAllAndInsertNewOrder() {
-		Level2View level2 = new Level2ViewService(true);
+		Level2View level2 = new Level2ViewAlternativeService(true);
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -189,7 +189,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnReplaceAskOrderOverTheSpreadThatInsertNewOrder() {
-		Level2View level2 = new Level2ViewService(true);
+		Level2View level2 = new Level2ViewAlternativeService(true);
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -219,7 +219,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnCancelOrderOverTheSpreadThatInsertNewOrder() {
-		Level2View level2 = new Level2ViewService(true);
+		Level2View level2 = new Level2ViewAlternativeService(true);
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -233,7 +233,7 @@ public class Level2ViewServiceTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOnCancelOrderThatDoesNotExist() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onCancelOrder(1);
 
@@ -241,7 +241,7 @@ public class Level2ViewServiceTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOnReplaceOrderThatDoesNotExist() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onReplaceOrder(new BigDecimal("12.00"), 1000, 4);
 
@@ -249,7 +249,7 @@ public class Level2ViewServiceTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOnTradeOrderThatDoesNotExist() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onTrade(1000, 1);
 
@@ -257,7 +257,7 @@ public class Level2ViewServiceTest {
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOnCreateOrderThatAlreadyExist() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 1, 2);
@@ -266,7 +266,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testGetSizeOnPriceLevel() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 50, 2);
@@ -279,7 +279,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnTradeThatCancelAnOrder() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 100, 1);
 		level2.onNewOrder(Side.BID, new BigDecimal("10.00"), 100, 2);
@@ -292,7 +292,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testOnTradeThatPartiallyConsumeAnOrder() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		level2.onNewOrder(Side.ASK, new BigDecimal("10.00"), 101, 1);
 		level2.onNewOrder(Side.BID, new BigDecimal("10.00"), 100, 2);
@@ -305,7 +305,7 @@ public class Level2ViewServiceTest {
 
 	@Test
 	public void testGetSizeForPriceLevel() {
-		Level2View level2 = new Level2ViewService();
+		Level2View level2 = new Level2ViewAlternativeService();
 
 		assertEquals(0L, level2.getSizeForPriceLevel(Side.ASK, new BigDecimal("10.00")));
 		assertEquals(0L, level2.getSizeForPriceLevel(Side.BID, new BigDecimal("10.00")));
