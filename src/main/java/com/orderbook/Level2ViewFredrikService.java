@@ -95,13 +95,7 @@ public class Level2ViewFredrikService implements Level2View {
 
 	@Override
 	public synchronized void onCancelOrder(long orderId) {
-		Order orderToCancel;
-
-		if (isNull(orders.get(orderId))) {
-			throw new IllegalArgumentException("An order with this orderId does not exists!");
-		} else {
-			orderToCancel = orders.get(orderId);
-		}
+		Order orderToCancel = getOrderFromOrdersMap(orderId);
 
 		List<Order> orderToCancelList = getProperMap(orderToCancel.getSide()).get(orderToCancel.getPrice());
 		orderToCancelList.remove(orderToCancel);
@@ -118,6 +112,13 @@ public class Level2ViewFredrikService implements Level2View {
 	@Override
 	public synchronized void onReplaceOrder(BigDecimal price, long quantity, long orderId) {
 
+		Order orderToReplace = getOrderFromOrdersMap(orderId);
+
+		onCancelOrder(orderToReplace.getOrderId());
+		onNewOrder(orderToReplace.getSide(), price, quantity, orderId);
+	}
+
+	private Order getOrderFromOrdersMap(long orderId) {
 		Order orderToReplace;
 
 		if (isNull(orders.get(orderId))) {
@@ -125,21 +126,13 @@ public class Level2ViewFredrikService implements Level2View {
 		} else {
 			orderToReplace = orders.get(orderId);
 		}
-
-		onCancelOrder(orderToReplace.getOrderId());
-		onNewOrder(orderToReplace.getSide(), price, quantity, orderId);
+		return orderToReplace;
 	}
 
 	@Override
 	public synchronized void onTrade(long quantity, long restingOrderId) {
 
-		Order orderToTrade;
-
-		if (isNull(orders.get(restingOrderId))) {
-			throw new IllegalArgumentException("An order with this orderId does not exists!");
-		} else {
-			orderToTrade = orders.get(restingOrderId);
-		}
+		Order orderToTrade = getOrderFromOrdersMap(restingOrderId);
 
 		if (orderToTrade.getQuantity() > quantity) {
 			long remainingQty = orderToTrade.getQuantity() - quantity;
