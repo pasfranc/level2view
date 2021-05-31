@@ -33,13 +33,9 @@ public class Level2ViewAlternativeService implements Level2View {
 
 		List<Order> orderByPrice = getProperMap(side).get(price) == null ? new ArrayList<>()
 				: getProperMap(side).get(price);
-		List<Order> oppositeOrderByPrice = getProperMap(oppositeSide(side)).get(price) == null ? new ArrayList<>()
-				: getProperMap(oppositeSide(side)).get(price);
+		List<Order> fullOrderList = getFullOrderList();
 
-		List<Order> fullOrderByPrice = Stream.concat(orderByPrice.stream(), oppositeOrderByPrice.stream())
-				.collect(Collectors.toList());
-
-		Optional<Order> orderWithSameOrderId = fullOrderByPrice.stream()
+		Optional<Order> orderWithSameOrderId = fullOrderList.stream()
 				.filter((order) -> order.getOrderId() == orderId).findAny();
 
 		if (orderWithSameOrderId.isPresent()) {
