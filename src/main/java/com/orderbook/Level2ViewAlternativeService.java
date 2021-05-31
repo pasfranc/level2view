@@ -190,10 +190,6 @@ public class Level2ViewAlternativeService implements Level2View {
 		return askOrderMapByPrice.isEmpty() ? BigDecimal.ZERO : askOrderMapByPrice.firstKey();
 	}
 
-	private Side oppositeSide(Side side) {
-		return side.equals(Side.ASK) ? Side.BID : Side.ASK;
-	}
-
 	@Override
 	public String toString() {
 		return "Level2ViewImpl [askOrderMapByPrice=" + askOrderMapByPrice + ",bidOrderMapByPrice" + bidOrderMapByPrice
