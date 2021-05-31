@@ -1,44 +1,43 @@
 package com.orderbook;
 
+import static java.util.Objects.isNull;
+import static java.util.Objects.nonNull;
+
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentSkipListMap;
-import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import com.orderbook.model.Order;
 import com.orderbook.model.Trade;
 
-public class Level2ViewAlternativeService implements Level2View {
+public class Level2ViewFredrikService implements Level2View {
 
-	private ConcurrentSkipListMap<BigDecimal, List<Order>> askOrderMapByPrice = new ConcurrentSkipListMap<>();
-	private ConcurrentSkipListMap<BigDecimal, List<Order>> bidOrderMapByPrice = new ConcurrentSkipListMap<>();
-	private List<Trade> historyTrades = new CopyOnWriteArrayList<>();
+	private TreeMap<BigDecimal, List<Order>> askOrderMapByPrice = new TreeMap<>();
+	private TreeMap<BigDecimal, List<Order>> bidOrderMapByPrice = new TreeMap<>();
+	private HashMap<Long, Order> orders = new HashMap<>();
+
+	private List<Trade> historyTrades = new ArrayList<>();
 
 	private boolean newOrderIfStockPriceIsCrossed = false;
 
-	public Level2ViewAlternativeService() {
+	public Level2ViewFredrikService() {
 	};
 
-	public Level2ViewAlternativeService(boolean newOrderIfCrossed) {
+	public Level2ViewFredrikService(boolean newOrderIfCrossed) {
 		this.newOrderIfStockPriceIsCrossed = newOrderIfCrossed;
 	}
 
 	@Override
-	public void onNewOrder(Side side, BigDecimal price, long quantity, long orderId) {
+	public synchronized void onNewOrder(Side side, BigDecimal price, long quantity, long orderId) {
 
 		List<Order> orderByPrice = getProperMap(side).get(price) == null ? new ArrayList<>()
 				: getProperMap(side).get(price);
-		List<Order> fullOrderList = getFullOrderList();
 
-		Optional<Order> orderWithSameOrderId = fullOrderList.stream().filter((order) -> order.getOrderId() == orderId)
-				.findAny();
-
-		if (orderWithSameOrderId.isPresent()) {
+		if (nonNull(orders.get(orderId))) {
 			throw new IllegalArgumentException("An order with this orderId already exists!");
 		}
 
@@ -48,6 +47,7 @@ public class Level2ViewAlternativeService implements Level2View {
 		if (interestedOrders.isEmpty()) {
 			orderByPrice.add(newOrder);
 			getProperMap(side).putIfAbsent(price, orderByPrice);
+			orders.putIfAbsent(orderId, newOrder);
 		} else {
 			consumeOrder(newOrder, interestedOrders);
 		}
@@ -94,16 +94,19 @@ public class Level2ViewAlternativeService implements Level2View {
 	}
 
 	@Override
-	public void onCancelOrder(long orderId) {
-		List<Order> fullOrderList = getFullOrderList();
+	public synchronized void onCancelOrder(long orderId) {
+		Order orderToCancel;
 
-		Optional<Order> orderWithSameOrderId = fullOrderList.stream().filter((order) -> order.getOrderId() == orderId)
-				.findAny();
-		Order orderToCancel = findOrderWithSameOrderId(orderWithSameOrderId);
+		if (isNull(orders.get(orderId))) {
+			throw new IllegalArgumentException("An order with this orderId does not exists!");
+		} else {
+			orderToCancel = orders.get(orderId);
+		}
 
 		List<Order> orderToCancelList = getProperMap(orderToCancel.getSide()).get(orderToCancel.getPrice());
 		orderToCancelList.remove(orderToCancel);
 
+		orders.remove(orderId);
 		getProperMap(orderToCancel.getSide()).remove(orderToCancel.getPrice());
 
 		if (!orderToCancelList.isEmpty()) {
@@ -112,56 +115,39 @@ public class Level2ViewAlternativeService implements Level2View {
 
 	}
 
-	private List<Order> getFullOrderList() {
-		List<Order> askOrderList = askOrderMapByPrice.values().stream().flatMap(List::stream)
-				.collect(Collectors.toList());
-
-		List<Order> bidOrderList = bidOrderMapByPrice.values().stream().flatMap(List::stream)
-				.collect(Collectors.toList());
-
-		List<Order> fullOrderList = Stream.concat(askOrderList.stream(), bidOrderList.stream())
-				.collect(Collectors.toList());
-		return fullOrderList;
-	}
-
 	@Override
-	public void onReplaceOrder(BigDecimal price, long quantity, long orderId) {
-		List<Order> fullOrderList = getFullOrderList();
+	public synchronized void onReplaceOrder(BigDecimal price, long quantity, long orderId) {
 
-		Optional<Order> orderWithSameOrderId = fullOrderList.stream().filter((order) -> order.getOrderId() == orderId)
-				.findAny();
-		Order orderToReplace = findOrderWithSameOrderId(orderWithSameOrderId);
+		Order orderToReplace;
+
+		if (isNull(orders.get(orderId))) {
+			throw new IllegalArgumentException("An order with this orderId does not exists!");
+		} else {
+			orderToReplace = orders.get(orderId);
+		}
 
 		onCancelOrder(orderToReplace.getOrderId());
 		onNewOrder(orderToReplace.getSide(), price, quantity, orderId);
 	}
 
-	private Order findOrderWithSameOrderId(Optional<Order> orderWithSameOrderId) {
-		Order orderToReplace;
-		if (orderWithSameOrderId.isPresent()) {
-			orderToReplace = orderWithSameOrderId.get();
-		} else {
-			throw new IllegalArgumentException("An order with this orderId does not exists!");
-		}
-		return orderToReplace;
-	}
-
 	@Override
-	public void onTrade(long quantity, long restingOrderId) {
+	public synchronized void onTrade(long quantity, long restingOrderId) {
 
-		List<Order> fullOrderList = getFullOrderList();
+		Order orderToTrade;
 
-		Optional<Order> orderWithSameOrderId = fullOrderList.stream()
-				.filter((order) -> order.getOrderId() == restingOrderId).findAny();
-		Order restingOrder = findOrderWithSameOrderId(orderWithSameOrderId);
+		if (isNull(orders.get(restingOrderId))) {
+			throw new IllegalArgumentException("An order with this orderId does not exists!");
+		} else {
+			orderToTrade = orders.get(restingOrderId);
+		}
 
-		if (restingOrder.getQuantity() > quantity) {
-			long remainingQty = restingOrder.getQuantity() - quantity;
-			onReplaceOrder(restingOrder.getPrice(), remainingQty, restingOrderId);
-			historyTrades.add(new Trade(restingOrder.getPrice(), quantity, restingOrder.getOrderId()));
+		if (orderToTrade.getQuantity() > quantity) {
+			long remainingQty = orderToTrade.getQuantity() - quantity;
+			onReplaceOrder(orderToTrade.getPrice(), remainingQty, restingOrderId);
+			historyTrades.add(new Trade(orderToTrade.getPrice(), quantity, orderToTrade.getOrderId()));
 		} else {
 			onCancelOrder(restingOrderId);
-			historyTrades.add(new Trade(restingOrder.getPrice(), quantity, restingOrder.getOrderId()));
+			historyTrades.add(new Trade(orderToTrade.getPrice(), quantity, orderToTrade.getOrderId()));
 		}
 	}
 
